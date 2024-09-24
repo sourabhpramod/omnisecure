@@ -1,6 +1,6 @@
 # Sentinel360
 
-> An ecosystem which works towards women saftey and empowerment. This ecosystem is powered by several products whose core objective is women safety.
+An ecosystem which works towards women saftey and empowerment. This ecosystem is powered by several products whose core objective is women safety.
 
 ### Products
 
@@ -11,7 +11,7 @@
 
 ## SafeScape
 
-> AI Software that detects risky situations for women and potential assaults using CCTV footage and sends real time alerts to authorities.
+ AI Software that detects risky situations for women and potential assaults using CCTV footage and sends real time alerts to authorities.
 
 - CCTV cameras capture continuous video footage.
 - Edge devices (e.g., NVIDIA Jetson, Google Coral DevBoard) process the video streams in real-time using computer vision algorithms.
@@ -24,7 +24,7 @@
 
 ## Mobile Application
 
-> Provide women with a mobile-based safety tool that offers real-time alerts, safe route navigation, and a panic button, with added integration to the CCTV system and wearable devices
+Provide women with a mobile-based safety tool that offers real-time alerts, safe route navigation, and a panic button, with added integration to the CCTV system and wearable devices
 
 ### High Priority Features
 ---
@@ -54,7 +54,7 @@ Benefit: Prevents women from unknowingly walking into unsafe areas and allows fo
 
 ## WearOS Application
 
-> A wearable device that offers immediate access to safety features (panic button, location tracking) and syncs with the mobile app for seamless safety and monitoring.
+A wearable device that offers immediate access to safety features (panic button, location tracking) and syncs with the mobile app for seamless safety and monitoring.
 
 ### Key Features:
 ---
