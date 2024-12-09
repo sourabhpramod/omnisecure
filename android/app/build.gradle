@@ -10,8 +10,10 @@ plugins {
 
 android {
     namespace = "com.example.omnisecure"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 34    
+    ndkVersion = "25.1.8937393"
+
+
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -28,7 +30,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         minSdkVersion 23 
@@ -42,6 +44,15 @@ android {
         }
     }
 }
+
+dependencies {
+    def camerax_version = "1.4.0"
+    implementation "androidx.camera:camera-camera2:${camerax_version}"
+    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    implementation "androidx.camera:camera-view:${camerax_version}"
+
+}
+
 
 flutter {
     source = "../.."

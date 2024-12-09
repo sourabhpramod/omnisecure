@@ -11,7 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
-
+import 'package:camera/camera.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,20 +25,34 @@ class _HomePageState extends State<HomePage> {
   Timer? _sosTimer;
   double lati = 0;
   double longi = 0;
-
-
+  Timer? _videoTimer;
+  CameraController? _cameraController;
   WebSocketChannel? _webSocketChannel;
   bool _isCapturing = false;
   int sosflag = 0;
+
   @override
   void initState() {
     super.initState();
     setGlobalUid();
     _requestLocationPermission();
-
+    _initializeCamera();
   }
 
- 
+  Future<void> _initializeCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isNotEmpty) {
+        _cameraController = CameraController(cameras.first, ResolutionPreset.medium);
+        await _cameraController?.initialize();
+      } else {
+        throw Exception("No cameras available.");
+      }
+    } catch (e) {
+      print("Error initializing camera: $e");
+      // Optionally, show a message to the user if the camera initialization fails
+    }
+  }
 
   Future<void> _requestLocationPermission() async {
     PermissionStatus permission = await Permission.location.request();
@@ -114,14 +128,64 @@ class _HomePageState extends State<HomePage> {
       print('SOS button pressed 3 times quickly!');
       _triggerSOSAction();
       if (sosflag == 1) {
-        //_startVideoStream();
+        _startVideoStream();
       }
     }
   }
 
-  void _triggerSOSAction() async {
-    // Implement SOS action here (e.g., send an alert, message, etc.)
+  void _startVideoStream() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      print("Camera is not initialized.");
+      return;
+    }
 
+    final uri = Uri.parse("wss://$baseUrl/ws/stream/$uid/$alertid/mp4");
+    _webSocketChannel = WebSocketChannel.connect(uri);
+    _webSocketChannel!.stream.listen((message) {
+      print("Server response: $message");
+    }, onError: (error) {
+      print("WebSocket error: $error");
+    });
+
+    List<Uint8List> videoFrames = [];
+    final duration = Duration(minutes: 1);
+    final endTime = DateTime.now().add(duration);
+
+    _videoTimer =
+        Timer.periodic(const Duration(milliseconds: 200), (timer) async {
+      if (DateTime.now().isAfter(endTime)) {
+        _stopVideoStream(videoFrames);
+      } else {
+        if (!_isCapturing) {
+          _isCapturing = true;
+
+          try {
+            final videoFrame = await _cameraController?.takePicture();
+            final bytes = await videoFrame?.readAsBytes();
+            if (bytes != null) {
+              videoFrames.add(bytes);
+            }
+          } catch (e) {
+            print("Error capturing picture: $e");
+          } finally {
+            _isCapturing = false;
+          }
+        }
+      }
+    });
+  }
+
+  void _stopVideoStream(List<Uint8List> videoFrames) {
+    _videoTimer?.cancel();
+    for (var frame in videoFrames) {
+      _webSocketChannel!.sink.add(frame);
+    }
+    _webSocketChannel?.sink.close();
+    sosflag = 0;
+    print("Video streaming stopped.");
+  }
+
+  void _triggerSOSAction() async {
     print("SOS Action triggered!");
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
@@ -139,18 +203,16 @@ class _HomePageState extends State<HomePage> {
 
     final response = await http.post(
       sosurl,
-      headers: <String, String>{
+      headers: <String, String> {
         'Content-Type': 'application/json; charset=UTF-8',
       },
     );
     if (response.statusCode == 200) {
-      // The request was successful
       print('Request successful: ${response.body}');
       var sosjson = jsonDecode(response.body);
       alertid = sosjson['alert_id'];
       sosflag = 1;
     } else {
-      // The request failed
       print('Request failed with status: ${response.statusCode}');
     }
     _sosPressCount = 0;
@@ -160,7 +222,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _sosTimer?.cancel();
-   
+    _cameraController?.dispose();
     super.dispose();
   }
 
